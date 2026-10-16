@@ -1,8 +1,19 @@
-# Digital Market
+# Digital Market — ديجيتال ماركت
 
-منصة عربية أولًا لبيع المنتجات الرقمية، مبنية بـ **Next.js 14 App Router** وTypeScript strict وTailwind CSS. التجربة تعمل مباشرة ببيانات mock حتى قبل إضافة مفاتيح Supabase، مع طبقات جاهزة للتحويل إلى الإنتاج.
+منصة عربية لبيع وشراء المنتجات الرقمية، مبنية باستخدام Next.js 14 App Router وTypeScript وTailwind CSS وSupabase.
 
-## التشغيل المحلي
+**الموقع:** https://digital-market-pink.vercel.app  
+**المستودع:** https://github.com/wahedelfar/digital-market
+
+## التقنيات
+
+- Next.js 14 وTypeScript strict.
+- Tailwind CSS وواجهات عربية تدعم RTL والوضع الداكن.
+- Supabase Auth وPostgres وStorage.
+- Recharts لرسوم لوحة التحكم.
+- Paymob كمسار الدفع الأساسي المخطط للسوق المصري.
+
+## تشغيل المشروع محليًا
 
 ```bash
 pnpm install
@@ -10,33 +21,40 @@ cp .env.example .env.local
 pnpm dev
 ```
 
-افتح `http://localhost:3000`.
+ثم افتح `http://localhost:3000`.
 
-## أهم المسارات
+## إعداد Supabase
 
-- `/` السوق، البحث، الفئات والفلاتر.
-- `/p/brand-starter-kit` صفحة بيع منتج.
-- `/checkout/brand-starter-kit` الدفع التجريبي.
-- `/dashboard` لوحة البائع والإحصاءات.
-- `/dashboard/new` رفع ونشر منتج جديد.
-- `/dashboard/products` و`/dashboard/sales` و`/dashboard/payouts` و`/dashboard/settings`.
+1. أنشئ مشروع Supabase أو استخدم المشروع المرتبط بالفعل.
+2. أضف متغيرات البيئة من `.env.example` إلى إعدادات المشروع في Vercel والبيئة المحلية.
+3. ملف المخطط الأساسي: `supabase/migrations/001_initial_schema.sql`.
+4. يحتوي المخطط على `profiles` و`products` و`sales` و`downloads` مع سياسات RLS وفهارس أساسية.
+5. ينشئ المخطط bucket خاصًا باسم `digital-files` بحد أقصى 2GB وسياسات وصول مبنية على مجلد المستخدم.
 
-## Supabase
+### متغيرات البيئة
 
-1. أنشئ مشروعًا جديدًا في Supabase.
-2. انسخ القيم إلى `.env.local`:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY` للخادم فقط.
-3. نفّذ ملف `supabase/migrations/001_initial_schema.sql` من SQL Editor.
-4. فعّل Email وGoogle وMagic Link من Authentication Providers.
-5. أنشئ bucket خاصًا للملفات الرقمية، واستخدم طبقة `lib/storage` لإصدار الروابط الموقعة بدل كشف المسار الأصلي.
+- `NEXT_PUBLIC_SUPABASE_URL`: رابط مشروع Supabase.
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: مفتاح publishable/anon العام. يجوز استخدامه في المتصفح مع سياسات RLS صحيحة.
+- `SUPABASE_SERVICE_ROLE_KEY`: مفتاح خادم حساس فقط. لا تضعه في متغير يبدأ بـ `NEXT_PUBLIC_` ولا تضفه إلى Git.
+- `NEXT_PUBLIC_SITE_URL`: عنوان الموقع العام.
+- `PAYMOB_API_KEY`, `PAYMOB_INTEGRATION_ID`, `PAYMOB_IFRAME_ID`, `PAYMOB_HMAC_SECRET`: إعدادات Paymob على الخادم فقط.
 
-## الدفع والتخزين
+لا ترفع ملف `.env` أو `.env.local` إلى GitHub. ملف `.env.example` مخصص لأسماء المتغيرات والقيم العامة غير السرية.
 
-`lib/payments` يحتوي واجهة موحدة وadapters لـ Paymob وFawry وStripe وPayPal، مع أولوية Paymob لمصر. الواجهة الحالية تحاكي النتيجة الناجحة كي تبقى التجربة قابلة للاختبار بلا أسرار دفع. قبل الإنتاج، أضف مفاتيح المزود إلى بيئة الخادم واربط webhooks والتحقق من التوقيع.
+## المسارات الرئيسية
 
-## التحقق والبناء
+- `/`: واجهة السوق والبحث والفئات.
+- `/p/[slug]`: صفحة المنتج.
+- `/checkout/[slug]`: تدفق الشراء.
+- `/dashboard`: لوحة البائع.
+- `/dashboard/new`: إضافة منتج.
+- `/dashboard/products`, `/dashboard/sales`, `/dashboard/payouts`, `/dashboard/settings`: إدارة المتجر.
+
+## الدفع والتنزيلات
+
+لا تُدخل مفاتيح Paymob أو مفاتيح الخادم في ملفات الواجهة. قبل تفعيل البيع الحقيقي، يجب أن يكون تأكيد الدفع صادرًا من خادم موثوق بعد التحقق من توقيع webhook، وألا يُعتبر رجوع المستخدم إلى صفحة النجاح إثباتًا للدفع. يجب إصدار رابط Storage موقّع بعد التحقق من رمز التنزيل، وانتهاء الصلاحية، وحد التنزيلات في قاعدة البيانات.
+
+## التحقق
 
 ```bash
 pnpm typecheck
@@ -44,4 +62,4 @@ pnpm build
 pnpm start
 ```
 
-لا تضع أي مفاتيح سرية في Git. ملف `.env.example` هو المرجع الوحيد لأسماء المتغيرات.
+> ملاحظة حالة التنفيذ: المخطط الأساسي والتخزين الخاص تم إعدادهما على Supabase. يجب التحقق من كل مسار مصادقة وشراء وتنزيل على بيئة النشر قبل اعتبار المنصة جاهزة لاستقبال مدفوعات أو ملفات عملاء حقيقية.
