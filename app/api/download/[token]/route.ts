@@ -1,3 +1,4 @@
+import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -17,7 +18,13 @@ export async function GET(_request: Request, { params }: { params: { token: stri
     if (/payment not confirmed/i.test(message)) return NextResponse.json({ error: "لم يتم تأكيد الدفع بعد" }, { status: 402 });
     return NextResponse.json({ error: "تعذر التحقق من رابط التنزيل" }, { status: 400 });
   }
-  const { data: signed, error: signedError } = await supabase.storage.from("digital-files").createSignedUrl(data.file_path, 60);
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serverKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // Storage signing requires an authorized server credential because the bucket is private.
+  // Never expose this key to browser bundles. If not configured, fail closed.
+  if (!url || !serverKey) return NextResponse.json({ error: "تنزيل الملفات غير مهيأ على الخادم" }, { status: 503 });
+  const admin = createClient(url, serverKey, { auth: { persistSession: false, autoRefreshToken: false } });
+  const { data: signed, error: signedError } = await admin.storage.from("digital-files").createSignedUrl(data.file_path, 60);
   if (signedError || !signed?.signedUrl) return NextResponse.json({ error: "تعذر إنشاء رابط الملف" }, { status: 500 });
   return NextResponse.redirect(signed.signedUrl, { status: 302 });
 }
