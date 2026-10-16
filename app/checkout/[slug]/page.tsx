@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/primitives";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatPrice } from "@/lib/utils";
 
-type Product = { id: string; slug: string; title: string; description: string; price: number; currency: string; thumbnail_url: string | null; is_published: boolean; published: boolean };
+type Product = { id: string; slug: string; title: string; description: string; price: number; currency: "EGP" | "USD"; thumbnail_url: string | null; is_published: boolean; published: boolean };
 
 async function findProduct(slug: string): Promise<Product | null> {
   const supabase = createSupabaseServerClient();
