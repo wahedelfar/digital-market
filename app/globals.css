@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { --font-arabic: "Segoe UI", Tahoma, Arial, sans-serif; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: #f8f7f3; color: #17202b; font-family: var(--font-arabic); }
+.dark body { background: #121a24; color: #f7f8f9; }
+::selection { background: rgba(242,106,79,.24); }
+button, a, input { -webkit-tap-highlight-color: transparent; }
+.grid-paper { background-image: linear-gradient(rgba(23,32,43,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(23,32,43,.045) 1px, transparent 1px); background-size: 32px 32px; }
+.dark .grid-paper { background-image: linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px); }
+.text-balance { text-wrap: balance; }
+.hero-orb { box-shadow: 0 0 0 1px rgba(242,106,79,.18), 0 20px 70px rgba(242,106,79,.18); }
+@keyframes float { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-9px) rotate(1deg); } }
+.float { animation: float 7s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; scroll-behavior: auto !important; transition-duration: .01ms !important; } }
