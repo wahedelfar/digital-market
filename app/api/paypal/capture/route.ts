@@ -32,10 +32,10 @@ export async function POST(request: Request) {
     const order = await paypalRequest<PayPalOrder>(`/v2/checkout/orders/${encodeURIComponent(orderId)}`, { method: "GET" });
     const unit = order.purchase_units?.[0];
     const expectedAmount = Number(product.price).toFixed(2);
-    if (unit?.custom_id !== product.id || unit.amount?.currency_code !== currency || unit.amount.value !== expectedAmount) {
+    if (!unit || !unit.amount || unit.custom_id !== product.id || unit.amount.currency_code !== currency || unit.amount.value !== expectedAmount) {
       return NextResponse.json({ error: "بيانات الطلب لا تطابق المنتج وسعره." }, { status: 400 });
     }
-    if (order.status !== "APPROVED" && order.status !== "CREATED") return NextResponse.json({ error: "طلب PayPal ليس جاهزًا للتحصيل." }, { status: 409 });
+    if (order.status !== "APPROVED") return NextResponse.json({ error: "يجب الموافقة على طلب PayPal قبل التحصيل." }, { status: 409 });
 
     const captured = await paypalRequest<CaptureResult>(`/v2/checkout/orders/${encodeURIComponent(orderId)}/capture`, { method: "POST", body: "{}" });
     const capture = captured.purchase_units?.[0]?.payments?.captures?.[0];
