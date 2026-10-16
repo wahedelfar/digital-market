@@ -13,7 +13,26 @@ const categories = ["الكل","كتب","قوالب","كورسات","تصميم�
 
 export default function HomePage() {
  const [products,setProducts]=useState<Product[]>([]),[category,setCategory]=useState("الكل"),[query,setQuery]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState("");
- useEffect(()=>{let active=true; const db=getSupabaseBrowserClient(); db.from("products").select("id,slug,title,description,price,currency,category,thumbnail,thumbnail_url,sales_count,profiles(store_name)").eq("is_published",true).order("created_at",{ascending:false}).then(({data,error})=>{if(!active)return;if(error)setError("تعذر تحميل المنتجات. تحقق من اتصال قاعدة البيانات وسياسات الوصول.");setProducts((data??[]) as Product[]);setLoading(false)});return()=>{active=false}},[]);
+ useEffect(()=>{
+  let active=true;
+  const loadProducts=async()=>{
+   try {
+    const db=getSupabaseBrowserClient();
+    const {data,error:queryError}=await db.from("products").select("id,slug,title,description,price,currency,category,thumbnail,thumbnail_url,sales_count,profiles(store_name)").eq("is_published",true).order("created_at",{ascending:false});
+    if(!active)return;
+    if(queryError)setError("تعذر تحميل المنتجات. تحقق من اتصال قاعدة البيانات وسياسات الوصول.");
+    setProducts((data??[]) as Product[]);
+   } catch (cause) {
+    if(!active)return;
+    console.error("Homepage product loading failed:",cause);
+    setError("تعذر الاتصال بقاعدة البيانات حاليًا. حاول تحديث الصفحة بعد قليل.");
+   } finally {
+    if(active)setLoading(false);
+   }
+  };
+  void loadProducts();
+  return()=>{active=false};
+ },[]);
  const visible=useMemo(()=>products.filter(p=>(category==="الكل"||p.category===category)&&`${p.title} ${p.description} ${Array.isArray(p.profiles)?p.profiles[0]?.store_name:p.profiles?.store_name}`.toLowerCase().includes(query.toLowerCase())),[products,category,query]);
  return <main>
  <section className="relative overflow-hidden border-b border-line dark:border-white/10"><div className="grid-paper absolute inset-0 opacity-60"/><div className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 py-20 lg:grid-cols-2 lg:py-24"><div><Badge className="mb-6 bg-mint text-[#27634c]"><Sparkles size={13} className="ml-1"/> سوق رقمي عربي</Badge><h1 className="text-5xl font-black leading-tight tracking-tight text-ink sm:text-7xl dark:text-white">حوّل خبرتك<br/><span className="text-coral">إلى دخل.</span></h1><p className="mt-7 max-w-lg text-lg leading-8 text-slate-600 dark:text-slate-300">أول منصة عربية للمنتجات الرقمية. اكتشف منتجات حقيقية أو ابدأ بيع خبرتك في مكان واحد.</p><div className="mt-9 flex flex-wrap gap-3"><a href="#discover"><Button size="lg">اكتشف المنتجات <ArrowLeft size={18}/></Button></a><Link href="/auth/register"><Button size="lg" variant="outline">أضف منتجك <Upload size={17}/></Button></Link></div></div><div className="grid-paper rounded-[30px] bg-sand p-8 dark:bg-[#202b38] sm:p-12"><div className="text-xs font-bold tracking-widest text-coral">DIGITAL MARKET / 2026</div><div className="mt-16 text-4xl font-black text-ink dark:text-white">أفكار صغيرة.<br/><span className="text-coral">أثر كبير.</span></div><p className="mt-5 text-slate-500">ملفات، قوالب، كتب ودورات من صناع المحتوى.</p></div></div></section>
